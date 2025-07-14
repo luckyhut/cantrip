@@ -1,5 +1,6 @@
 import os
 import subprocess
+from google.genai import types
 
 def run_python_file(working_directory, file_path):
     wabs_path = os.path.abspath(working_directory)
@@ -19,16 +20,30 @@ def run_python_file(working_directory, file_path):
 
     try:
         run_result = subprocess.run(["python", joined_path], capture_output=True, timeout=30, cwd=wabs_path)
-
+        
         result = []
         if run_result.stdout or run_result.stderr:
-            result.append("STDOUT:" + run_result.stdout.decode() + "\n")
-            result.append("STDERR:" + run_result.stderr.decode())
+            result.append(f'STDOUT:\n {run_result.stdout.decode()} ')
+            result.append(f'STDERR:\n {run_result.stderr.decode()} ')
 
         if run_result.returncode != 0:
-            result.append(f'\nProcess exited with code {run_result.returncode}\n')
+            result.append(f' \n Process exited with code {run_result.returncode}\n ')
 
         return "\n".join(result) if result else "No output produced."
     
     except Exception as e:
         return f'Error: executing Python file: {e}'
+
+schema_run_python_file = types.FunctionDeclaration(
+    name="run_python_file",
+    description="Runs a given python file.",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "file_path": types.Schema(
+                type=types.Type.STRING,
+                description="File path to the given python file.",
+            ),
+        },
+    ),
+)
