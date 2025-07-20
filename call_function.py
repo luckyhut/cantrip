@@ -26,7 +26,6 @@ def call_function(function_call_part, verbose=False):
     match function_call_part.name:
         case "get_files_info":
             result = get_files_info(WORKING_DIR, function_call_part.args['directory'])
-            print('Ran 9 tests')
         case "get_file_content":
             result = get_file_content(WORKING_DIR, function_call_part.args['file_path'])
         case "run_python_file":

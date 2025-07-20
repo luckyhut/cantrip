@@ -27,8 +27,16 @@ def main():
     messages = [
         types.Content(role='user', parts=[types.Part(text=user_prompt)]),
     ]
-    
-    generate_content(client, messages, verbose)
+
+    for i in range(1, 10):
+        try:
+            response = generate_content(client, messages, verbose)
+            if response:
+                print("Final response:")
+                print(response)
+                return
+        except Exception as e:
+            print(f'Error, exited process: {e}')
 
 def generate_content(client, messages, verbose):
     response = client.models.generate_content(
@@ -43,16 +51,30 @@ def generate_content(client, messages, verbose):
         print(f"Prompt tokens: { response.usage_metadata.prompt_token_count }")
         print(f"Response tokens: { response.usage_metadata.candidates_token_count }")
 
+    if response.candidates:
+        for candidate in response.candidates:
+            function_call_content = candidate.content
+            messages.append(function_call_content)
+        
     if not response.function_calls:
         return response.text
 
-    for fc in response.function_calls:
-        result = call_function(fc, verbose)
-        if not result.parts[0].function_response.response:
-            raise Exception("No response found!")
+    function_responses = []
+    for function_call_part in response.function_calls:
+        function_call_result = call_function(function_call_part, verbose)
+        if (
+            not function_call_result.parts
+            or not function_call_result.parts[0].function_response
+        ):
+            raise Exception("empty function call result")
+        
         if verbose:
-            print(f'-> {result.parts[0].function_response.response}')
-        result_dict = result.parts[0].function_response.response
-        print(result_dict['result'])
+            print(f'-> {function_call_result.parts[0].function_response.response}')
+        function_responses.append(function_call_result.parts[0])
+
+    if not function_responses:
+        raise Exception("no function responses generated, exiting.")
+    
+    messages.append(types.Content(role='tool', parts=function_responses))
 
 main()

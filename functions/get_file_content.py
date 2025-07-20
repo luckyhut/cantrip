@@ -1,5 +1,6 @@
 import os
 from google.genai import types
+MAX_CHARS = 10000
 
 def get_file_content(working_directory, file_path):
     wabs_path = os.path.abspath(working_directory)
@@ -16,11 +17,10 @@ def get_file_content(working_directory, file_path):
 
     try:
         file_content_string = ''
-        MAX_CHARS = 10000
         with open(joined_path, "r") as f:
             file_content_string = f.read(MAX_CHARS)
-        if len(file_content_string) == 10000:
-            file_content_string += '[...File "{file_path}" truncated at 10000 characters].'
+        if len(file_content_string) == MAX_CHARS:
+            file_content_string += f'[...File "{file_path}" truncated at {MAX_CHARS} characters].'
     except Exception as e:
         return f'Error: {e}'
 
